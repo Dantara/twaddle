@@ -19,7 +19,7 @@ library
   exposed-modules:     Common
   -- other-modules:
   -- other-extensions:
-  build-depends:       base ^>=4.14.1.0
+  build-depends:       base >=4.13
   -- hs-source-dirs:
   default-language:    Haskell2010
 
@@ -27,5 +27,5 @@ test-suite common-test
   default-language:    Haskell2010
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  main-is:             MyLibTest.hs
-  build-depends:       base ^>=4.14.1.0
+  main-is:             CommonTest.hs
+  build-depends:       base >=4.13
