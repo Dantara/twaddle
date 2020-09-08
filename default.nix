@@ -15,8 +15,7 @@ let
 in
   runCommand "twaddle" { inherit client server; } ''
     mkdir -p $out/{bin,static}
-    mkdir -p $out/static/assets
     cp ${server}/bin/* $out/bin
-    cp ${client}/bin/client.jsexe/* $out/static
-    cp -rf ${src}/assets/ $out/static/assets/
+    cp ${client}/bin/client.jsexe/all.js $out/static
+    cp -rf ${src}/assets/* $out/static/
   ''

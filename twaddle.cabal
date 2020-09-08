@@ -6,7 +6,7 @@ description:         Secure chat in your browser
 license:             BSD3
 license-file:        LICENSE
 author:              Nikita Aleshchenko
-maintainer:          supercreed2@gmial.com
+maintainer:          supercreed2@gmail.com
 copyright:           Nikita Aleshchenko (c) 2020
 category:            Web
 build-type:          Simple
@@ -28,7 +28,9 @@ executable server
       servant,
       servant-server,
       wai,
-      warp
+      warp,
+      miso,
+      lucid
     default-language:
       Haskell2010
 
