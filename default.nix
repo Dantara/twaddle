@@ -4,7 +4,7 @@ with (import (builtins.fetchTarball {
   sha256 = "1yb9yvc0ln4yn1jk2k5kwwa1s32310abawz40yd8cqqkm1z7w6wg";
 }) {});
 let
-  inherit (pkgs) runCommand;
+  inherit (pkgs) runCommand closurecompiler;
   inherit (pkgs.haskell.packages) ghcjs86 ghc865;
 
   client = ghcjs86.callCabal2nix "twaddle" ./. {};
@@ -16,6 +16,11 @@ in
   runCommand "twaddle" { inherit client server; } ''
     mkdir -p $out/{bin,static}
     cp ${server}/bin/* $out/bin
-    cp ${client}/bin/client.jsexe/all.js $out/static
+    cp ${server}/bin/* $out
+    ${closurecompiler}/bin/closure-compiler --compilation_level ADVANCED_OPTIMIZATIONS \
+      --jscomp_off=checkVars \
+      --externs=${client}/bin/client.jsexe/all.js.externs \
+      ${client}/bin/client.jsexe/all.js > temp.js
+    mv temp.js $out/static/all.js
     cp -rf ${src}/assets/* $out/static/
   ''

@@ -30,7 +30,8 @@ executable server
       wai,
       warp,
       miso,
-      lucid
+      lucid,
+      wai-app-static
     default-language:
       Haskell2010
 

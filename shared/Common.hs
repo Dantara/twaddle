@@ -42,7 +42,13 @@ type ChatPage = View Action
 
 home :: Model -> View Action
 home x = div_ [] [
-    label_ [] [
+    div_ [class_ "jumbotron", class_ "jumbotron-fluid"] [
+        div_ [class_ "container"] [
+              h1_ [class_ "display-4"] [text "Twaddle"]
+            , p_ [class_ "lead"] [text "Secure chat in your browser"]
+                                  ]
+                                                        ]
+  , label_ [] [
         text "Your nickname:"
       , input_ []
             ]

@@ -6,11 +6,12 @@
 module Main where
 
 import           Common
-import qualified Lucid                    as L
+import qualified Lucid                          as L
 import           Lucid.Base
 import           Miso
 import           Miso.String
 import           Network.Wai
+import           Network.Wai.Application.Static
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Servant.API
@@ -44,6 +45,7 @@ instance L.ToHtml a => L.ToHtml (Wrapper a) where
                   , L.content_ "Secure chat in your browser"
                   ]
           cssRef bootstrapCssRef
+          jsRef jqueryRef
           jsRef bootstrapJsRef
           cssRef "static/style.css"
           jsRef "static/all.js"
@@ -68,11 +70,13 @@ bootstrapCssRef = "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootst
 bootstrapJsRef :: MisoString
 bootstrapJsRef = "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"
 
+jqueryRef :: MisoString
+jqueryRef = "https://code.jquery.com/jquery-3.5.1.min.js"
+
 proxyAPI :: Proxy API
 proxyAPI = Proxy
 
 app :: Application
--- app = serve proxyAPI server
 app = serve (Proxy @ API) (serverHandlers :<|> static)
   where
     static = serveDirectoryWebApp "static"
