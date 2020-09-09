@@ -31,7 +31,8 @@ executable server
       warp,
       miso,
       lucid,
-      wai-app-static
+      wai-app-static,
+      servant-lucid
     default-language:
       Haskell2010
 

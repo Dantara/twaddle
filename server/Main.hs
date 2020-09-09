@@ -15,21 +15,18 @@ import           Network.Wai.Application.Static
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Servant.API
+import           Servant.HTML.Lucid
 
-type API = ServerRoutes
+type API = (Get '[HTML] Layout)
   :<|> StaticAPI
 
 type StaticAPI = "static" :> Raw
 
-type ServerRoutes = ToServerRoutes ClientRoutes Wrapper Action
+data Layout = Layout
 
--- | Wrapper for setting HTML doctype and header
-newtype Wrapper a = Wrapper a
-  deriving (Show, Eq)
-
-instance L.ToHtml a => L.ToHtml (Wrapper a) where
-  toHtmlRaw = L.toHtml
-  toHtml (Wrapper x) = do
+instance L.ToHtml Layout where
+  toHtmlRaw = toHtml
+  toHtml Layout = do
       L.doctype_
       L.html_ [ L.lang_ "en" ] $ do
         L.head_ $ do
@@ -49,7 +46,9 @@ instance L.ToHtml a => L.ToHtml (Wrapper a) where
           jsRef bootstrapJsRef
           cssRef "static/style.css"
           jsRef "static/all.js"
-        L.body_ (L.toHtml x)
+        L.body_ $
+          L.div_ [L.class_ "container"] $
+             L.div_ [L.class_ "col-md-10 offset-md-1", L.id_ "main-container"] mempty
           where
             jsRef href =
               L.with (L.script_ mempty)
@@ -73,26 +72,13 @@ bootstrapJsRef = "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstra
 jqueryRef :: MisoString
 jqueryRef = "https://code.jquery.com/jquery-3.5.1.min.js"
 
-proxyAPI :: Proxy API
-proxyAPI = Proxy
-
 app :: Application
-app = serve (Proxy @ API) (serverHandlers :<|> static)
+app = serve (Proxy @ API) (pure Layout :<|> static)
   where
     static = serveDirectoryWebApp "static"
 
 port :: Int
 port = 3000
-
-serverHandlers ::
-       Handler (Wrapper (View Action))
-  :<|> Handler (Wrapper (View Action))
-serverHandlers = homeHandler :<|> chatHandler
-  where
-    send f u = pure $ Wrapper $ f u
-    homeHandler = send home (Model Home [])
-    chatHandler = send chat (Model Chat [])
-
 
 main :: IO ()
 main = do
