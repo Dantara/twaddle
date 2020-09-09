@@ -32,7 +32,13 @@ executable server
       miso,
       lucid,
       wai-app-static,
-      servant-lucid
+      servant-lucid,
+      aeson,
+      bytestring,
+      cryptonite,
+      text,
+      network,
+      splitmix
     default-language:
       Haskell2010
 
@@ -49,6 +55,9 @@ executable client
     build-depends:
       base < 5,
       miso,
-      servant
+      servant,
+      bytestring,
+      aeson,
+      text
     default-language:
       Haskell2010

@@ -6,20 +6,31 @@
 module Main where
 
 import           Common
+import           Control.Monad.IO.Class
+import           Crypto.Hash                    (Digest, SHA256, hash)
+import           Data.Aeson
+import           Data.ByteString                (ByteString)
+import qualified Data.Text                      as T
+import           Data.Text.Encoding
 import qualified Lucid                          as L
 import           Lucid.Base
 import           Miso
 import           Miso.String
+import           Network.Socket
 import           Network.Wai
 import           Network.Wai.Application.Static
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Servant.API
 import           Servant.HTML.Lucid
+import           System.Random.SplitMix
 
-type API = (Get '[HTML] Layout)
+type API = LayoutAPI
+  :<|> TokenAPI
   :<|> StaticAPI
 
+type LayoutAPI = Get '[HTML] Layout
+type TokenAPI = "token" :> RemoteHost :> Get '[JSON] Token
 type StaticAPI = "static" :> Raw
 
 data Layout = Layout
@@ -73,15 +84,34 @@ jqueryRef :: MisoString
 jqueryRef = "https://code.jquery.com/jquery-3.5.1.min.js"
 
 app :: Application
-app = serve (Proxy @ API) (pure Layout :<|> static)
+app = serve (Proxy @ API) (pure Layout :<|> tokenHandler :<|> static)
   where
     static = serveDirectoryWebApp "static"
+
+tokenHandler :: SockAddr -> Handler Token
+tokenHandler addr = liftIO $ genToken $ T.pack $ show addr
 
 port :: Int
 port = 3000
 
+salt :: Text
+salt = "Super secret salt"
+
 main :: IO ()
 main = do
+  _ <- initSMGen
   putStrLn $ "Starting the server at "
     <> show(port) <> " port."
   run port app
+
+genToken :: Text -> IO Token
+genToken addr = do
+  gen <- newSMGen
+  let (w, _) = nextWord64 gen
+  return
+    $ Token
+    $ T.pack
+    $ show
+    $ (hash :: ByteString -> Digest SHA256)
+    $ encodeUtf8
+    $ T.unwords [addr, T.pack $ show w, salt]
