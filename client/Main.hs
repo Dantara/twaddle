@@ -5,6 +5,7 @@ module Main where
 
 import           Common
 import           Data.Aeson
+import           Data.Proxy
 import           Miso
 import           Miso.String
 import           Servant.Client.Ghcjs
@@ -20,11 +21,14 @@ data Message = Message {
 
 data Model = Model {
   screen     :: Screen
+  , token    :: MisoString
   , messages :: [Message]
   } deriving (Eq, Show)
 
 data Action
-  = Init
+  = NoOp
+  | FetchToken
+  | SetToken Token
   | Connect
   | SendMessage
   deriving (Eq, Show)
@@ -33,8 +37,8 @@ data Action
 main :: IO ()
 main = startApp App {..}
   where
-    initialAction = Init          -- initial action to be executed on application load
-    model  = Model Home []        -- initial model
+    initialAction = FetchToken    -- initial action to be executed on application load
+    model  = Model Home "" []        -- initial model
     update = updateModel          -- update function
     view   = viewModel            -- view function
     events = defaultEvents        -- default delegated events
@@ -43,15 +47,19 @@ main = startApp App {..}
     logLevel = Off                -- used during prerendering to see if the VDOM and DOM are in synch (only used with `miso` function)
 
 updateModel :: Action -> Model -> Effect Action Model
-updateModel Init m               = noEff m
-updateModel Connect (Model _ ms) = noEff (Model Chat ms)
+updateModel NoOp m                 = noEff m
+updateModel Connect (Model _ t ms) = noEff (Model Chat t ms)
+updateModel FetchToken m = m <# do
+  SetToken <$> fetchToken
+updateModel (SetToken t) m =
+  noEff m {token = toMisoString $ getToken t}
 
 viewModel :: Model -> View Action
-viewModel m@(Model Home _) = home m
-viewModel m@(Model Chat _) = chat m
+viewModel m@(Model Chat _ _) = chat m
+viewModel m                  = home m
 
 home :: Model -> View Action
-home x = div_ [] [
+home m = div_ [] [
     div_ [class_ "jumbotron jumbotron-fluid"] [
         div_ [class_ "container"] [
               h1_ [class_ "display-4"] [text "Twaddle"]
@@ -68,7 +76,7 @@ home x = div_ [] [
         , div_ [class_ "form-group row"] [
             label_ [class_ "col-md-3 col-form-label"] [text "Your token: "]
             , div_ [class_ "col-md-9"] [
-                input_ [readonly_ True, class_ "form-control-plaintext", value_ "kjhjhgug76kh213"]
+                input_ [readonly_ True, class_ "form-control-plaintext", value_ (token m)]
                                         ]
                                          ]
         , div_ [class_ "form-group row"] [
@@ -85,3 +93,18 @@ chat :: Model -> View Action
 chat x = div_ [] [
   text "Chat"
                  ]
+
+tokenApi :: Proxy TokenAPI
+tokenApi = Proxy
+
+tokenClient :: ClientM Token
+tokenClient = client tokenApi
+
+fetchToken :: IO Token
+fetchToken = do
+  resp <- runClientM tokenClient
+  case resp of
+    Left _ ->
+      return $ Token "Error"
+    Right t ->
+      return t

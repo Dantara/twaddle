@@ -30,10 +30,7 @@ type API = LayoutAPI
   :<|> StaticAPI
 
 type LayoutAPI = Get '[HTML] Layout
-type TokenAPI = "token" :> RemoteHost :> Get '[JSON] Token
 type StaticAPI = "static" :> Raw
-
-data Layout = Layout
 
 instance L.ToHtml Layout where
   toHtmlRaw = toHtml
@@ -97,6 +94,9 @@ port = 3000
 salt :: Text
 salt = "Super secret salt"
 
+lengthOfToken :: Int
+lengthOfToken = 50
+
 main :: IO ()
 main = do
   _ <- initSMGen
@@ -110,6 +110,7 @@ genToken addr = do
   let (w, _) = nextWord64 gen
   return
     $ Token
+    $ T.take lengthOfToken
     $ T.pack
     $ show
     $ (hash :: ByteString -> Digest SHA256)
