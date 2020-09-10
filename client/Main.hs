@@ -7,6 +7,7 @@ import           Common
 import           Data.Aeson
 import           Miso
 import           Miso.String
+import           Servant.Client.Ghcjs
 
 data Screen = Home
   | Chat
