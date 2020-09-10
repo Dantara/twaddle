@@ -20,10 +20,11 @@ data Message = Message {
   } deriving (Eq, Show)
 
 data Model = Model {
-  screen     :: Screen
-  , token    :: MisoString
-  , nickname :: MisoString
-  , messages :: [Message]
+  screen       :: Screen
+  , token      :: MisoString
+  , nickname   :: MisoString
+  , messages   :: [Message]
+  , currentMsg :: MisoString
   } deriving (Eq, Show)
 
 data Action
@@ -33,6 +34,7 @@ data Action
   | Connect
   | SendMessage
   | UpdateNickname MisoString
+  | UpdateCurrentMsg MisoString
   deriving (Eq, Show)
 
 -- | Entry point for a miso application
@@ -40,7 +42,7 @@ main :: IO ()
 main = startApp App {..}
   where
     initialAction = FetchToken    -- initial action to be executed on application load
-    model  = Model Home "" "" []        -- initial model
+    model  = Model Home "" "" [] ""   -- initial model
     update = updateModel          -- update function
     view   = viewModel            -- view function
     events = defaultEvents        -- default delegated events
@@ -60,6 +62,16 @@ updateModel (SetToken t) m =
 updateModel (UpdateNickname nick) m =
   m {nickname = nick} <# do
   pure NoOp
+updateModel (UpdateCurrentMsg msg) m =
+  m {currentMsg = msg} <# do
+  pure NoOp
+updateModel SendMessage m =
+  let
+    newMsg = Message (nickname m) (currentMsg m)
+  in
+    m {messages = (messages m) <> [newMsg]
+      , currentMsg = ""} <# do
+    pure NoOp
 
 viewModel :: Model -> View Action
 viewModel m
@@ -73,11 +85,11 @@ home m = div_ [] [
               h1_ [class_ "display-4"] [text "Twaddle"]
             , p_ [class_ "lead"] [text "Secure chat in your browser"]
                                   ]
-                                                        ]
+                                              ]
     , div_ [class_ "form-group row"] [
             label_ [class_ "col-md-3 col-form-label"] [text "Your nickname: "]
             , div_ [class_ "col-md-9"] [
-                input_ [class_ "form-control", placeholder_ "Nickname"]
+                input_ [onChange UpdateNickname, class_ "form-control", placeholder_ "Nickname"]
                                         ]
                                        ]
     , div_ [class_ "form-group row"] [
@@ -96,21 +108,26 @@ home m = div_ [] [
   ]
 
 chat :: Model -> View Action
-chat x = div_ [] [
+chat m = div_ [] [
   div_ [class_ "header"] [
       h1_ [] [text "Twaddle"]
                          ]
   , div_ [class_ "chat"] [
-      div_ [class_ "messages-field col-sm-12"] [
-          h5_ [] [text "Dantara:"]
-          , p_ [] [text "Hello World!!!"]
-                                                                      ]
+      div_ [class_ "messages-field col-sm-12"]
+      (messageToView <$> (messages m))
       , div_ [class_ "form-inline sender-line"] [
-          input_ [class_ "form-control col-md-10", placeholder_ "Message"]
-          , button_ [onClick NoOp, class_ "btn btn-secondary col-md-2"] [text "Send"]
+          input_ [onChange UpdateCurrentMsg, class_ "form-control col-md-10", placeholder_ "Message"]
+          , button_ [onClick SendMessage, class_ "btn btn-secondary col-md-2"] [text "Send"]
                                ]
                          ]
                  ]
+
+messageToView :: Message -> View Action
+messageToView (Message u c) = div_ [class_ "message"] [
+              h5_ [] [text (u <> ":")]
+              , p_ [] [text c]
+        ]
+
 
 tokenApi :: Proxy TokenAPI
 tokenApi = Proxy

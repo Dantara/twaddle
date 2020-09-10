@@ -14,12 +14,16 @@ body{
     border-radius: 15px;
 }
 
-.messages-field h5{
+.message {
+    margin-top: 10px;
+}
+
+.message h5{
     font-weight: bold;
     padding-top: 10px;
 }
 
-.messages-field p{
+.message p{
     padding-left: 15px;
 }
 .sender-line{
