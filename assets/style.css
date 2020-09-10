@@ -2,3 +2,26 @@ body{
     height: 100%;
     width: 100%;
 }
+
+.header{
+    text-align: center;
+    margin: 15px;
+}
+
+.messages-field{
+    box-shadow: 2px 2px 16px black;
+    height: 75vh;
+    border-radius: 15px;
+}
+
+.messages-field h5{
+    font-weight: bold;
+    padding-top: 10px;
+}
+
+.messages-field p{
+    padding-left: 15px;
+}
+.sender-line{
+    margin-top: 10px;
+}
